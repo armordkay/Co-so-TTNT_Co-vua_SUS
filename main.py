@@ -170,3 +170,4 @@ while running:
                 selected_square = None
 
 pygame.quit()
+print("hello world!")
