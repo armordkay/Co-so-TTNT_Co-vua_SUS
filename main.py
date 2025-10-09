@@ -1,5 +1,8 @@
 import pygame
 import chess
+from engine import ChessEngine
+
+engine = ChessEngine()
 
 # Cấu hình hiển thị 
 pygame.init()
@@ -132,42 +135,52 @@ def draw_board(selected_square=None):
             kc = chess.square_file(king_sq) if not flipped else 7 - chess.square_file(king_sq)
             pygame.draw.rect(screen, RED,
                              (kc * SQ_SIZE, kr * SQ_SIZE, SQ_SIZE, SQ_SIZE), 4)
+            return False
+    return True
 
 # Game loop
 selected_square = None
 running = True
 while running:
-    draw_board(selected_square)
+    running = draw_board(selected_square)
+    if not running:
+        break
     pygame.display.flip()
     clock.tick(60)
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+    if board.turn == player_color:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
 
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            sq = get_square_under_mouse()
-            if sq is None:
-                continue
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                sq = get_square_under_mouse()
+                if sq is None:
+                    continue
 
-            piece = board.piece_at(sq)
-            if selected_square is None:
-                if piece and piece.color == board.turn:
-                    selected_square = sq
-            else:
-                move = chess.Move(selected_square, sq)
+                piece = board.piece_at(sq)
+                if selected_square is None:
+                    if piece and piece.color == board.turn:
+                        selected_square = sq
+                else:
+                    move = chess.Move(selected_square, sq)
 
-                # Phong cấp
-                from_piece = board.piece_at(selected_square)
-                if (from_piece is not None and
-                    from_piece.piece_type == chess.PAWN and
-                    (chess.square_rank(sq) == 7 or chess.square_rank(sq) == 0)):
-                    move = chess.Move(selected_square, sq, promotion=chess.QUEEN)
+                    # Phong cấp
+                    from_piece = board.piece_at(selected_square)
+                    if (from_piece is not None and
+                        from_piece.piece_type == chess.PAWN and
+                        (chess.square_rank(sq) == 7 or chess.square_rank(sq) == 0)):
+                        move = chess.Move(selected_square, sq, promotion=chess.QUEEN)
 
-                if move in board.legal_moves:
-                    board.push(move)
+                    if move in board.legal_moves:
+                        board.push(move)
 
-                selected_square = None
-
+                    selected_square = None
+    else:
+        # Nước đi của engine
+        move = engine.find_best_move(board, depth=4, maximizing=(board.turn == chess.WHITE))
+        if move is not None:
+            board.push(move)
+            selected_square = move.from_square
+pygame.time.wait(60)
 pygame.quit()
-print("hello world!")
