@@ -178,9 +178,8 @@ while running:
                     selected_square = None
     else:
         # Nước đi của engine
-        move = engine.find_best_move(board, depth=4, maximizing=(board.turn == chess.WHITE))
+        move = engine.find_best_move(board, depth=3, maximizing=(board.turn == chess.WHITE))
         if move is not None:
             board.push(move)
             selected_square = move.from_square
-pygame.time.wait(60)
 pygame.quit()
