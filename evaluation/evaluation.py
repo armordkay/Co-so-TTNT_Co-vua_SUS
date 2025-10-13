@@ -1,5 +1,5 @@
 import chess
-from piece_values import PieceSquareTables as PST
+from evaluation.piece_values import PieceSquareTables as PST
 
 class EvaluationData:
     """Lưu trữ các thành phần điểm đánh giá cho một bên."""
@@ -91,10 +91,10 @@ class Evaluation:
         
         # Tính toán tổng điểm và trả về theo góc nhìn
         eval_sum = self.white_eval.sum() - self.black_eval.sum()
-        # perspective = 1 if self.board.turn == chess.WHITE else -1
+        perspective = 1 if self.board.turn == chess.WHITE else -1
         
-        # return eval_sum * perspective
-        return eval_sum
+        return eval_sum * perspective
+        # return eval_sum
     
     def get_material_info(self, color: chess.Color) -> MaterialInfo:
         num_pawns = len(self.board.pieces(chess.PAWN, color))

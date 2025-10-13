@@ -1,45 +1,14 @@
 import chess
-from evaluation import Evaluation
+from evaluation.evaluation import Evaluation
+from search.ids import IterativeDeepeningSearch, TranspositionTable
 
 class ChessEngine:
     def __init__(self):
         self.evaluator = Evaluation()
-
-    def alphabeta(self, board: chess.Board, depth, alpha, beta, maximizing):
-        if depth == 0 or board.is_game_over():
-            return self.evaluator.evaluate(board)
-        if maximizing:
-            value = -float('inf')
-            for move in board.legal_moves:
-                board.push(move)
-                value = max(value, self.alphabeta(board, depth - 1, alpha, beta, False))
-                board.pop()
-                alpha = max(alpha, value)
-                if alpha >= beta:
-                    break
-            return value
-        else:
-            value = float('inf')
-            for move in board.legal_moves:
-                board.push(move)
-                value = min(value, self.alphabeta(board, depth - 1, alpha, beta, True))
-                board.pop()
-                beta = min(beta, value)
-                if beta <= alpha:
-                    break
-            return value
+        self.tt = TranspositionTable(size_mb=64)
+        self.searcher = IterativeDeepeningSearch(self.evaluator, self.tt)
     
-    def find_best_move(self, board: chess.Board, depth, maximizing):
-        best_move = None
-        best_value = -float('inf') if board.turn == chess.WHITE else float('inf')
-        for move in board.legal_moves:
-            board.push(move)
-            value = self.alphabeta(board, depth-1, -float('inf'), float('inf'), maximizing)
-            board.pop()
-            if board.turn == chess.WHITE and value > best_value:
-                best_value = value
-                best_move = move
-            elif board.turn == chess.BLACK and value < best_value:
-                best_value = value
-                best_move = move
+    def run(self, board: chess.Board, time_limit: float) -> chess.Move:
+        """Tìm nước đi tốt nhất trong giới hạn thời gian."""
+        best_move = self.searcher.search(board.copy(), time_limit)
         return best_move

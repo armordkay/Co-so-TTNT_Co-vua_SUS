@@ -141,6 +141,7 @@ def draw_board(selected_square=None):
 # Game loop
 selected_square = None
 running = True
+engine_thinking = False
 while running:
     running = draw_board(selected_square)
     if not running:
@@ -177,9 +178,12 @@ while running:
 
                     selected_square = None
     else:
-        # Nước đi của engine
-        move = engine.find_best_move(board, depth=3, maximizing=(board.turn == chess.WHITE))
-        if move is not None:
-            board.push(move)
-            selected_square = move.from_square
+        if not engine_thinking:  # chỉ chạy nếu engine chưa xử lý
+            engine_thinking = True
+            move = engine.run(board, time_limit=1.8)
+            if move is not None and move in board.legal_moves:
+                board.push(move)
+                selected_square = move.from_square
+            engine_thinking = False
+
 pygame.quit()
