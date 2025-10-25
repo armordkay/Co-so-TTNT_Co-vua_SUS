@@ -48,13 +48,9 @@ class Evaluation:
         chess.QUEEN: QUEEN_VALUE,
         chess.KING: 0 
     }
-    
-    # --- Các hằng số thưởng/phạt ---
-    PASSED_PAWN_BONUSES = [0, 120, 80, 50, 30, 15, 15]
-    ISOLATED_PAWN_PENALTY_BY_COUNT = [0, -10, -25, -50, -75, -75, -75, -75, -75]
-    KING_PAWN_SHIELD_SCORES = [4, 7, 4, 3, 6, 3]
 
-    ENDGAME_MATERIAL_START = ROOK_VALUE * 2 + BISHOP_VALUE + KNIGHT_VALUE
+    CHECKMATE_SCORE = 100000
+
     
     def __init__(self):
         self.board: chess.Board = None
@@ -80,14 +76,6 @@ class Evaluation:
         # 3. Điểm "dọn dẹp" (Mop-up) trong tàn cuộc thắng thế
         self.white_eval.mop_up_score = self.mop_up_eval(chess.WHITE, white_material, black_material)
         self.black_eval.mop_up_score = self.mop_up_eval(chess.BLACK, black_material, white_material)
-
-        # 4. Đánh giá cấu trúc tốt
-        # self.white_eval.pawn_score = self.evaluate_pawns(chess.WHITE)
-        # self.black_eval.pawn_score = self.evaluate_pawns(chess.BLACK)
-        
-        # 5. Điểm lá chắn tốt cho Vua
-        # self.white_eval.pawn_shield_score = self.king_pawn_shield(chess.WHITE, black_material, self.black_eval.piece_square_score)
-        # self.black_eval.pawn_shield_score = self.king_pawn_shield(chess.BLACK, white_material, self.white_eval.piece_square_score)
         
         # Tính toán tổng điểm và trả về theo góc nhìn
         eval_sum = self.white_eval.sum() - self.black_eval.sum()
@@ -145,11 +133,10 @@ class Evaluation:
         for piece_type in self.PIECE_VALUES.keys():
             pieces = self.board.pieces(piece_type, color)
             for square in pieces:
-                if color == chess.WHITE:
-                    pst_index = square
-                else:
-                    pst_index = chess.square_mirror(square)
-                
+                # --- Lấy chỉ số PST phù hợp ---
+                pst_index = square if color == chess.WHITE else chess.square_mirror(square)
+
+                # --- Điểm vị trí ---
                 if piece_type == chess.PAWN:
                     pawn_early += PST.pawn_start[pst_index]
                     pawn_end += PST.pawn_end[pst_index]
@@ -165,6 +152,14 @@ class Evaluation:
                     king_early += PST.king_start[pst_index]
                     king_end += PST.king_end[pst_index]
 
+                if self.board.is_attacked_by(not color, square):
+                    # Nếu quân này không được đồng đội bảo vệ
+                    if not self.board.is_attacked_by(color, square):
+                        # Phạt dựa trên giá trị quân (tốt ít, hậu nhiều)
+                        penalty = self.PIECE_VALUES[piece_type] // 4
+                        score -= penalty
+
+        # --- Kết hợp PST giữa đầu và cuối ván ---
         score += int(pawn_early * (1 - endgame_t) + pawn_end * endgame_t)
         score += int(king_early * (1 - endgame_t) + king_end * endgame_t)
         

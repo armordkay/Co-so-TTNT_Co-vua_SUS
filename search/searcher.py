@@ -92,11 +92,18 @@ class Searcher:
         if val != self.tt.LOOKUP_FAILED:
             return val, self.tt.get_stored_move(zobrist_key)
 
-        # Leaf node hoặc game over
-        if depth == 0 or board.is_game_over():
+        if board.is_checkmate():
+            return -self.evaluation.CHECKMATE_SCORE + ply, None
+        
+        if board.is_stalemate() or board.is_insufficient_material() or board.can_claim_draw():
+            return 0, None
+            
+        # Leaf node
+        if depth == 0:
             score = self.quiescence_search(board, alpha, beta, ply)
             self.tt.store_evaluation(0, ply, score, self.tt.EXACT, None, zobrist_key)
             return score, None
+        
 
         best_move = None
         best_score = -999999

@@ -144,8 +144,6 @@ running = True
 engine_thinking = False
 while running:
     running = draw_board(selected_square)
-    if not running:
-        break
     pygame.display.flip()
     clock.tick(60)
 
@@ -180,10 +178,10 @@ while running:
     else:
         if not engine_thinking:  # chỉ chạy nếu engine chưa xử lý
             engine_thinking = True
-            move = engine.run(board, time_limit=1.8)
+            move = engine.run(board, time_limit=2.0)
             if move is not None and move in board.legal_moves:
                 board.push(move)
                 selected_square = move.from_square
             engine_thinking = False
 
-pygame.quit()
+# pygame.quit()
