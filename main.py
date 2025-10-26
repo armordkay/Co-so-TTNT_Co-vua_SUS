@@ -135,15 +135,16 @@ def draw_board(selected_square=None):
             kc = chess.square_file(king_sq) if not flipped else 7 - chess.square_file(king_sq)
             pygame.draw.rect(screen, RED,
                              (kc * SQ_SIZE, kr * SQ_SIZE, SQ_SIZE, SQ_SIZE), 4)
-            return False
-    return True
+        text = font.render("Checkmate!", True, RED)
+        screen.blit(text, (WIDTH // 2 - text.get_width() // 2, HEIGHT // 2 - 20))
+        return True
 
 # Game loop
 selected_square = None
 running = True
 engine_thinking = False
 while running:
-    running = draw_board(selected_square)
+    draw_board(selected_square)
     pygame.display.flip()
     clock.tick(60)
 
