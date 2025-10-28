@@ -9,6 +9,5 @@ class ChessEngine:
         self.searcher = Searcher(self.evaluator, self.tt)
     
     def run(self, board: chess.Board, time_limit: float) -> chess.Move:
-        """Tìm nước đi tốt nhất trong giới hạn thời gian."""
         best_move = self.searcher.ids(board.copy(), time_limit)
         return best_move
