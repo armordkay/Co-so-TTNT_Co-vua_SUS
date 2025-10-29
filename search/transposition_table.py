@@ -3,7 +3,7 @@ class Entry:
         self.key = 0
         self.value = 0
         self.depth = 0
-        self.bound = 0  # 0: exact, 1: lower, 2: upper
+        self.bound = 0 
         self.move = None
 
 
@@ -14,7 +14,7 @@ class TranspositionTable:
     LOOKUP_FAILED = -999999
     
     def __init__(self, size_mb: int = 32):
-        entry_size = 32  # bytes per entry (estimate)
+        entry_size = 32 
         self.size = (size_mb * 1024 * 1024) // entry_size
         self.entries = [Entry() for _ in range(self.size)]
         self.enabled = True
@@ -34,7 +34,6 @@ class TranspositionTable:
         if entry.depth < depth:
             return self.LOOKUP_FAILED
         
-        # Adjust mate scores
         corrected_score = entry.value
         if abs(corrected_score) > 90000:
             sign = 1 if corrected_score > 0 else -1
@@ -56,7 +55,6 @@ class TranspositionTable:
         
         entry = self.entries[self.index(zobrist_key)]
         
-        # Adjust mate scores for storage
         corrected_score = evaluation
         if abs(evaluation) > 90000:
             sign = 1 if evaluation > 0 else -1

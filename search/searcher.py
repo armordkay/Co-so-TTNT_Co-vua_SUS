@@ -6,8 +6,6 @@ from search.transposition_table import TranspositionTable
 
 
 class Searcher:
-    """Iterative Deepening + Alpha-Beta + TT + Quiescence Search"""
-
     def __init__(self, evaluation, tt: TranspositionTable):
         self.evaluation = evaluation
         self.tt = tt
@@ -19,13 +17,12 @@ class Searcher:
         return (time.time() - self.start_time) >= self.time_limit
 
     def order_moves(self, board: chess.Board, tt_move: Optional[chess.Move]) -> list:
-        """Ưu tiên TT move, sau đó capture move (MVV-LVA)."""
         moves = list(board.legal_moves)
 
         def move_score(move):
             score = 0
             if tt_move and move == tt_move:
-                score += 100000  # TT move được ưu tiên nhất
+                score += 100000
             if board.is_capture(move):
                 attacker = board.piece_at(move.from_square)
                 victim = board.piece_at(move.to_square)
@@ -37,16 +34,13 @@ class Searcher:
         return moves
 
     def quiescence_search(self, board: chess.Board, alpha: int, beta: int, ply: int) -> int:
-        """Mở rộng các nước động (captures, checks) để tránh horizon effect."""
         self.nodes += 1
 
-        # Dừng nếu hết thời gian
         if (self.nodes & 2047) == 0 and self.is_time_up():
             raise TimeoutError
 
         zobrist_key = polyglot.zobrist_hash(board)
 
-        # Dùng lại từ TT nếu có
         tt_val = self.tt.lookup_evaluation(0, ply, alpha, beta, zobrist_key)
         if tt_val != self.tt.LOOKUP_FAILED:
             return tt_val
@@ -78,16 +72,13 @@ class Searcher:
 
     def alpha_beta(self, board: chess.Board, depth: int,
                    alpha: int, beta: int, ply: int) -> Tuple[int, Optional[chess.Move]]:
-        """Alpha-Beta search với Transposition Table và QS ở đáy."""
         self.nodes += 1
 
-        # Kiểm tra timeout
         if (self.nodes & 2047) == 0 and self.is_time_up():
             raise TimeoutError
 
         zobrist_key = polyglot.zobrist_hash(board)
 
-        # TT lookup
         val = self.tt.lookup_evaluation(depth, ply, alpha, beta, zobrist_key)
         if val != self.tt.LOOKUP_FAILED:
             return val, self.tt.get_stored_move(zobrist_key)
@@ -98,7 +89,6 @@ class Searcher:
         if board.is_stalemate() or board.is_insufficient_material() or board.can_claim_draw():
             return 0, None
             
-        # Leaf node
         if depth == 0:
             score = self.quiescence_search(board, alpha, beta, ply)
             self.tt.store_evaluation(0, ply, score, self.tt.EXACT, None, zobrist_key)
@@ -124,9 +114,8 @@ class Searcher:
 
             alpha = max(alpha, score)
             if alpha >= beta:
-                break  # Beta cutoff
+                break  
 
-        # Ghi kết quả vào TT
         if best_score <= alpha_orig:
             bound = self.tt.UPPER_BOUND
         elif best_score >= beta:
@@ -138,7 +127,6 @@ class Searcher:
         return best_score, best_move
 
     def ids(self, board: chess.Board, time_limit: float = 2.0) -> Optional[chess.Move]:
-        """Tìm move tốt nhất bằng iterative deepening."""
         self.start_time = time.time()
         self.time_limit = time_limit
         self.nodes = 0
@@ -150,7 +138,7 @@ class Searcher:
         best_move = legal_moves[0]
         last_completed_move = best_move
 
-        for depth in range(1, 64):  # tối đa 64 ply
+        for depth in range(1, 64): 
             try:
                 score, move = self.alpha_beta(board, depth, -999999, 999999, 0)
                 if move:
